@@ -1,0 +1,35 @@
+from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+from dotenv import load_dotenv
+from transcritor import processar_video_completo
+
+load_dotenv()
+
+app = FastAPI(title="Groq Transcriber API")
+
+app.mount("/download", StaticFiles(directory="static"), name="static")
+
+class VideoRequest(BaseModel):
+    url: str
+    idioma: str = "Português do Brasil"
+
+@app.post("/transcrever")
+async def api_transcrever(request: VideoRequest):
+    if not request.url:
+        raise HTTPException(status_code=400, detail="A URL não pode estar vazia.")
+        
+    try:
+        resultado = processar_video_completo(request.url, request.idioma)
+        
+        return {
+            "sucesso": True,
+            "transcricao": resultado["texto"],
+            "url_pdf": f"/download/{resultado['pdf_nome']}"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

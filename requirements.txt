@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+groq
+yt-dlp
+reportlab
+pydantic
+python-dotenv
